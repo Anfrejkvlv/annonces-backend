@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: annonces-backend-prod
+  datasource:
+    url: jdbc:postgresql://prod-db-server:5432/logement_etudiants
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  server:
+    port: 80
