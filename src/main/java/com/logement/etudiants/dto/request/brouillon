@@ -1,0 +1,339 @@
+
+/**
+ * DTO pour les requêtes de création et modification d'annonces
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Schema(description = "Données pour créer ou modifier une annonce de logement")
+public class AnnonceRequest {
+
+    @NotBlank(message = "Le titre est obligatoire")
+    @Size(min = 10, max = 100, message = "Le titre doit contenir entre 10 et 100 caractères")
+    @Schema(description = "Titre de l'annonce", example = "Belle chambre meublée près de l'université")
+    private String titre;
+
+    @NotBlank(message = "La description est obligatoire")
+    @Size(min = 50, max = 2000, message = "La description doit contenir entre 50 et 2000 caractères")
+    @Schema(description = "Description détaillée du logement",
+            example = "Chambre spacieuse et lumineuse de 15m² dans un appartement partagé...")
+    private String description;
+
+    @NotNull(message = "Le prix est obligatoire")
+    @DecimalMin(value = "0.01", message = "Le prix doit être supérieur à 0")
+    @DecimalMax(value = "999999.99", message = "Le prix ne peut pas dépasser 999999.99")
+    @Digits(integer = 6, fraction = 2, message = "Format de prix invalide")
+    @Schema(description = "Prix mensuel en MAD", example = "2500.00")
+    private BigDecimal prix;
+
+    @NotNull(message = "Le type de logement est obligatoire")
+    @Schema(description = "Type de logement", example = "CHAMBRE")
+    private TypeLogement typeLogement;
+
+    @NotNull(message = "La superficie est obligatoire")
+    @Min(value = 5, message = "La superficie doit être d'au moins 5 m²")
+    @Max(value = 500, message = "La superficie ne peut pas dépasser 500 m²")
+    @Schema(description = "Superficie en mètres carrés", example = "15")
+    private Integer superficie;
+
+    @Min(value = 1, message = "Au moins une pièce requise")
+    @Max(value = 10, message = "Maximum 10 pièces")
+    @Schema(description = "Nombre de pièces", example = "1")
+    private Integer nombrePieces;
+
+    @NotBlank(message = "L'adresse est obligatoire")
+    @Size(min = 10, max = 200, message = "L'adresse doit contenir entre 10 et 200 caractères")
+    @Schema(description = "Adresse complète", example = "123 Avenue Mohammed V, Agdal")
+    private String adresse;
+
+    @NotNull(message = "La ville est obligatoire")
+    @Min(value = 1, message = "ID de ville invalide")
+    @JsonProperty("ville_id")
+    @Schema(description = "ID de la ville", example = "1")
+    private Long villeId;
+
+    @NotNull(message = "Le quartier est obligatoire")
+    @Min(value = 1, message = "ID de quartier invalide")
+    @JsonProperty("quartier_id")
+    @Schema(description = "ID du quartier", example = "1")
+    private Long quartierId;
+
+    @DecimalMin(value = "-90.0", message = "Latitude invalide")
+    @DecimalMax(value = "90.0", message = "Latitude invalide")
+    @Digits(integer = 2, fraction = 8, message = "Format de latitude invalide")
+    @Schema(description = "Latitude GPS", example = "33.9716")
+    private BigDecimal latitude;
+
+    @DecimalMin(value = "-180.0", message = "Longitude invalide")
+    @DecimalMax(value = "180.0", message = "Longitude invalide")
+    @Digits(integer = 3, fraction = 8, message = "Format de longitude invalide")
+    @Schema(description = "Longitude GPS", example = "-6.8498")
+    private BigDecimal longitude;
+
+    @Size(max = 10, message = "Maximum 10 images autorisées")
+    @Schema(description = "URLs des images du logement")
+    private List<@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
+                message = "URL d'image invalide") String> images;
+
+    // Caractéristiques additionnelles
+    @Schema(description = "Logement meublé", example = "true")
+    private Boolean meuble = false;
+
+    @Schema(description = "Internet/WiFi disponible", example = "true")
+    private Boolean internet = false;
+
+    @Schema(description = "Climatisation disponible", example = "false")
+    private Boolean climatisation = false;
+
+    @Schema(description = "Chauffage disponible", example = "true")
+    private Boolean chauffage = false;
+
+    @Schema(description = "Parking disponible", example = "false")
+    private Boolean parking = false;
+
+    @Schema(description = "Balcon disponible", example = "true")
+    private Boolean balcon = false;
+
+    @Schema(description = "Jardin disponible", example = "false")
+    private Boolean jardin = false;
+
+    @Schema(description = "Proche des transports en commun", example = "true")
+    private Boolean transportProche = false;
+
+    @Schema(description = "Proche de l'université", example = "true")
+    private Boolean universiteProche = false;
+
+    @Schema(description = "Charges incluses dans le prix", example = "true")
+    private Boolean chargesIncluses = false;
+
+    @Min(value = 0, message = "Le montant des charges ne peut pas être négatif")
+    @Schema(description = "Montant des charges mensuelles si non incluses", example = "200.00")
+    private BigDecimal montantCharges;
+
+    @Size(max = 500, message = "Les conditions ne peuvent pas dépasser 500 caractères")
+    @Schema(description = "Conditions particulières",
+            example = "Non fumeur, pas d'animaux, caution de 2 mois")
+    private String conditions;
+
+    @Future(message = "La date de disponibilité doit être future")
+    @JsonProperty("date_disponibilite")
+    @Schema(description = "Date de disponibilité du logement")
+    private LocalDateTime dateDisponibilite;
+
+    @Min(value = 1, message = "Durée minimale de 1 mois")
+    @Max(value = 24, message = "Durée maximale de 24 mois")
+    @JsonProperty("duree_min_location")
+    @Schema(description = "Durée minimale de location en mois", example = "6")
+    private Integer dureeMinLocation;
+
+    @JsonProperty("contact_telephone")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Format de téléphone invalide")
+    @Schema(description = "Numéro de téléphone de contact", example = "+212123456789")
+    private String contactTelephone;
+
+    @JsonProperty("contact_whatsapp")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Format WhatsApp invalide")
+    @Schema(description = "Numéro WhatsApp de contact", example = "+212123456789")
+    private String contactWhatsapp;
+
+    @JsonProperty("visite_virtuelle")
+    @Pattern(regexp = "^https?://.*", message = "URL de visite virtuelle invalide")
+    @Schema(description = "URL de la visite virtuelle")
+    private String visiteVirtuelle;
+}
+
+
+
+/**
+ * * DTO pour les requêtes de connexion utilisateur
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+
+@Schema(description = "Données de connexion utilisateur")
+public class LoginRequest {
+
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "Format d'email invalide")
+    @Size(max = 100, message = "L'email ne peut pas dépasser 100 caractères")
+    @Schema(description = "Adresse email de l'utilisateur", example = "jean.dupont@example.com")
+    private String email;
+
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 8, max = 100, message = "Le mot de passe doit contenir entre 8 et 100 caractères")
+    @Schema(description = "Mot de passe de l'utilisateur", example = "password123", minLength = 8)
+    private String password;
+
+    @Schema(description = "Se souvenir de moi", example = "true")
+    private Boolean rememberMe = false;
+}
+/*public class LoginRequest {
+
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "Format d'email invalide")
+    @Size(max = 255, message = "L'email ne peut pas dépasser 255 caractères")
+    private String email;
+
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 6, max = 100, message = "Le mot de passe doit contenir entre 6 et 100 caractères")
+    private String password;
+}*/
+
+
+
+/**
+ * DTO pour les requêtes de réinitialisation de mot de passe
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ResetPasswordRequest {
+
+    @NotBlank(message = "Le token est obligatoire")
+    private String token;
+
+    @NotBlank(message = "Le nouveau mot de passe est obligatoire")
+    @Size(min = 8, max = 100, message = "Le mot de passe doit contenir entre 8 et 100 caractères")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+            message = "Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre")
+    private String nouveauMotDePasse;
+}
+
+
+
+/**
+ * DTO pour les requêtes de changement de mot de passe
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChangePasswordRequest {
+
+    @NotBlank(message = "L'ancien mot de passe est obligatoire")
+    private String ancienMotDePasse;
+
+    @NotBlank(message = "Le nouveau mot de passe est obligatoire")
+    @Size(min = 8, max = 100, message = "Le nouveau mot de passe doit contenir entre 8 et 100 caractères")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+            message = "Le nouveau mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre")
+    private String nouveauMotDePasse;
+}
+
+
+
+/**
+ *  * DTO pour les requêtes d'inscription utilisateur
+ *  */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Données d'inscription utilisateur")
+public class RegisterRequest {
+
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    @Schema(description = "Nom de famille", example = "Dupont")
+    private String nom;
+
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le prénom doit contenir entre 2 et 50 caractères")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le prénom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    @Schema(description = "Prénom", example = "Jean")
+    private String prenom;
+
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "Format d'email invalide")
+    @Size(max = 100, message = "L'email ne peut pas dépasser 100 caractères")
+    @Schema(description = "Adresse email unique", example = "jean.dupont@example.com")
+    private String email;
+
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 8, max = 100, message = "Le mot de passe doit contenir entre 8 et 100 caractères")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",
+            message = "Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial")
+    @Schema(description = "Mot de passe sécurisé", example = "Password123!", minLength = 8)
+    private String password;
+
+    @NotBlank(message = "La confirmation du mot de passe est obligatoire")
+    @Schema(description = "Confirmation du mot de passe", example = "Password123!")
+    private String confirmPassword;
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Format de téléphone invalide")
+    @Schema(description = "Numéro de téléphone", example = "+33123456789")
+    private String telephone;
+
+    @NotBlank(message = "Le pays est obligatoire")
+    @Size(min = 2, max = 50, message = "Le pays doit contenir entre 2 et 50 caractères")
+    @Schema(description = "Pays de résidence", example = "Maroc")
+    private String pays;
+
+    @Size(max = 100, message = "La ville ne peut pas dépasser 100 caractères")
+    @Schema(description = "Ville de résidence", example = "Casablanca")
+    private String ville;
+
+    @Size(max = 10, message = "L'âge ne peut pas dépasser 3 caractères")
+    @Min(value = 16, message = "L'âge minimum est de 16 ans")
+    @Max(value = 60, message = "L'âge maximum est de 60 ans")
+    @Schema(description = "Âge de l'utilisateur", example = "22")
+    private Integer age;
+
+    @Size(max = 50, message = "Le niveau d'études ne peut pas dépasser 50 caractères")
+    @Schema(description = "Niveau d'études", example = "Master")
+    private String niveauEtudes;
+
+    @Size(max = 100, message = "L'université ne peut pas dépasser 100 caractères")
+    @Schema(description = "Université ou établissement", example = "Université Mohammed V")
+    private String universite;
+
+    @AssertTrue(message = "Les mots de passe ne correspondent pas")
+    private boolean isPasswordMatching() {
+        if (password == null || confirmPassword == null) {
+            return false;
+        }
+        return password.equals(confirmPassword);
+    }
+
+    @AssertTrue(message = "Vous devez accepter les conditions d'utilisation")
+    @Schema(description = "Acceptation des conditions d'utilisation", example = "true")
+    private Boolean accepteConditions = false;
+
+    @Schema(description = "Acceptation de recevoir des notifications par email", example = "true")
+    private Boolean accepteNotifications = true;
+}
+/*public class RegisterRequest {
+
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    private String nom;
+
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le prénom doit contenir entre 2 et 50 caractères")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le prénom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    private String prenom;
+
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "Format d'email invalide")
+    @Size(max = 255, message = "L'email ne peut pas dépasser 255 caractères")
+    private String email;
+
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 8, max = 100, message = "Le mot de passe doit contenir entre 8 et 100 caractères")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+            message = "Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre")
+    private String password;
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Format de téléphone invalide")
+    private String telephone;
+
+    @NotBlank(message = "Le pays est obligatoire")
+    @Size(min = 2, max = 100, message = "Le pays doit contenir entre 2 et 100 caractères")
+    private String pays;
+}*/
