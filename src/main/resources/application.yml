@@ -1,42 +1,125 @@
 spring:
-  profiles:
-    include: secret
+  security:
+    enabled: false
   application:
     name: annonces-backend
-  datasource:
-    url: jdbc:postgresql://localhost:5432/logement_etudiants
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      idle-timeout: 300000
-      max-lifetime: 1200000
-      connection-timeout: 20000
+
+  profiles:
+    active: dev
+
   jpa:
-    hibernate:
-      ddl-auto: validate
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
     properties:
       hibernate:
-        format_sql: true
-        show_sql: false
         jdbc:
+          time_zone: UTC
           lob:
             non_contextual_creation: true
-    open-in-view: false
+        format_sql: true
+        use_sql_comments: true
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    deserialization:
+      fail-on-unknown-properties: false
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+      enabled: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+# Configuration JWT par défaut
+jwt:
+  secret: ${JWT_SECRET:59f5253d81c79c05e7ee6fe0e382d3fd87ee856cf1fcfe1f766ef8045c755ca603adf2e3c43a1c60ff58e615d0f3247f79fd68acb4eea7096f2cd0241ea1f55c}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 heures en millisecondes
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 jours
+
+# Configuration CORS
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000,swagger-ui/**,/v3/api-docs*/**}
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600
+
+# Configuration de sécurité
+app:
+  security:
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digits: true
+      require-special-chars: false
+
+  upload:
+    max-images-per-annonce: 10
+    allowed-image-types: jpg,jpeg,png,webp
+    max-image-size: 5MB
+
+# Configuration de cache Redis
+spring.data.redis:
+  repositories:
+    enabled: true
+  timeout: 2000ms
+
+# Configuration des logs
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    root: INFO
+    com.logement.etudiants: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
 
-server:
-  port: 8080
-  servlet:
-    context-path: /api/v1
+# Configuration Actuator pour monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
 
-jwt:
-  expiration: 86400000
+# Configuration OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tags-sorter: alpha
+  show-actuator: true
 
-cors:
-  allowed-origins: http://localhost:4200,http://localhost:3000
+# Informations de l'application
+info:
+  app:
+    name: "@project.name@"
+    description: "@project.description@"
+    version: "@project.version@"
+    encoding: "@project.build.sourceEncoding@"
+    java:
+      version: "@java.version@"
