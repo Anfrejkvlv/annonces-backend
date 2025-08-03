@@ -1,10 +1,112 @@
 spring:
-  application:
-    name: annonces-backend-prod
   datasource:
-    url: jdbc:postgresql://prod-db-server:5432/logement_etudiants
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1700000
+      connection-timeout: 30000
+      pool-name: HikariCP-Prod
+      leak-detection-threshold: 60000
+
   jpa:
     hibernate:
       ddl-auto: validate
-  server:
-    port: 80
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+        jdbc:
+          batch_size: 25
+          order_inserts: true
+          order_updates: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutes
+
+# Configuration JWT production (plus sécurisée)
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}  # 1 heure en production
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+# Configuration serveur
+server:
+  port: ${PORT:8084}
+  error:
+    include-stacktrace: never
+    include-message: never
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
+
+# Configuration production
+app:
+  upload:
+    base-dir: ${UPLOAD_BASE_DIR:/app/uploads}
+    temp-dir: ${UPLOAD_TEMP_DIR:/app/temp}
+# Configuration de sécurité renforcée
+  security:
+    password:
+          min-length: 10
+          require-uppercase: true
+          require-lowercase: true
+          require-digits: true
+          require-special-chars: true
+
+# Logs production (format JSON pour centralisation)
+logging:
+  level:
+    root: INFO
+    com.logement.etudiants: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%level","thread":"%thread","logger":"%logger","message":"%message"}%n'
+  file:
+    name: /app/logs/application.log
+    max-size: 100MB
+    max-history: 30
+
+# Configuration Actuator sécurisée
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+
+# Désactiver les fonctionnalités de développement
+debug: false
+trace: false
