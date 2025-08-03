@@ -33,3 +33,11 @@ build/
 .vscode/
 
 /src/main/resources/application-secret.yml
+/src/main/java/com/logement/etudiants/controller/brouillon
+/src/main/resources/brouillon
+/src/main/java/com/logement/etudiants/dto/response/brouillon
+/src/main/java/com/logement/etudiants/entity/brouillon
+/src/main/java/com/logement/etudiants/enumeration/brouillom
+/src/main/java/com/logement/etudiants/repository/brouillon
+/src/main/java/com/logement/etudiants/security/brouillon
+/src/main/java/com/logement/etudiants/service/brouillon
