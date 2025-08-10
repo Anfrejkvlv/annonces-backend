@@ -1,5 +1,6 @@
 package com.logement.etudiants.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logement.etudiants.enumeration.StatutAnnonce;
 import com.logement.etudiants.enumeration.TypeLogement;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,7 +39,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(exclude = {"utilisateur", "ville", "quartier"})
 @ToString(exclude = {"utilisateur"})
-public class Annonce {
+public class Annonce implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Annonce.class);
     @Id
@@ -115,8 +117,9 @@ public class Annonce {
     private BigDecimal longitude;
 
     // Images
-    @JsonIgnore
-    @ElementCollection
+    //@JsonIgnore
+
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "annonce_images",
             joinColumns = @JoinColumn(name = "annonce_id")
