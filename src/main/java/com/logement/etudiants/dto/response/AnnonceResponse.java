@@ -48,7 +48,7 @@ public class AnnonceResponse {
 
     private BigDecimal longitude;
 
-    @JsonIgnore
+    //@JsonIgnore
     private List<String> images;
 
     private StatutAnnonce statut;
