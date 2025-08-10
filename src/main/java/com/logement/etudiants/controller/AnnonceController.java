@@ -7,24 +7,23 @@ import com.logement.etudiants.dto.response.MessageResponse;
 import com.logement.etudiants.dto.response.PageResponse;
 import com.logement.etudiants.entity.Annonce;
 import com.logement.etudiants.entity.User;
-import com.logement.etudiants.service.AnnonceService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 
 /**
@@ -122,9 +121,10 @@ class AnnonceController {
     /**
      * Crée une nouvelle annonce
      */
-    @PostMapping
-    @Operation(summary = "Créer une nouvelle annonce",
-            description = "Crée une nouvelle annonce de logement")
+    @PostMapping(value = "/jsoncreate", consumes = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Créer une nouvelle annonce sans images",
+            description = "Crée une nouvell" +
+                    "e annonce de logement")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Annonce créée avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides"),
@@ -134,6 +134,7 @@ class AnnonceController {
             @Valid @RequestBody AnnonceRequest request,
             @AuthenticationPrincipal
             User currentUser) {
+        log.info("DONNEES {}",request);
 
         log.info("Création d'annonce demandée par l'utilisateur: {}", currentUser.getEmail());
 
@@ -142,10 +143,62 @@ class AnnonceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping(value = "/imagecreate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Créer une nouvelle annonce avec images",
+            description = "Crée une nouvell" +
+                    "e annonce de logement")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Annonce créée avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides"),
+            @ApiResponse(responseCode = "401", description = "Non autorisé")
+    })
+    public ResponseEntity<AnnonceResponse> createAnnonceWithImages(
+            @RequestPart("annonce") AnnonceRequest annonceRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal User currentUser) {
+
+
+        // ✅ LOG DÉTAILLÉ POUR DEBUG
+        log.info("🔍 DEBUGGING PAYLOAD:");
+        log.info("  - Titre: {}", annonceRequest.getTitre());
+        log.info("  - Prix: {} (type: {})", annonceRequest.getPrix(),
+                annonceRequest.getPrix() != null ? annonceRequest.getPrix().getClass().getSimpleName() : "null");
+        log.info("  - Superficie: {}", annonceRequest.getSuperficie());
+        log.info("  - Latitude: {}", annonceRequest.getLatitude());
+        log.info("  - Longitude: {}", annonceRequest.getLongitude());
+
+        // Log du JSON reçu pour debug
+        log.info("📋 Données reçues: {}", annonceRequest);
+
+        if (images != null) {
+            log.info("🖼️ Images reçues:");
+            images.forEach(img -> log.info("  - {} ({} bytes)",
+                    img.getOriginalFilename(), img.getSize()));
+        }
+
+        log.info("Création d'annonce avec {} images pour l'utilisateur: {}",
+                images != null ? images.size() : 0, currentUser.getEmail());
+
+        AnnonceResponse response = annonceService.createAnnonceWithImages(
+                annonceRequest, images, currentUser);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // Alternative: endpoint pour création sans images
+    @PostMapping(value = "/create-simple", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<AnnonceResponse> createAnnonceSimple(
+            @Valid @RequestBody AnnonceRequest annonceRequest,
+            @AuthenticationPrincipal User currentUser) {
+
+        AnnonceResponse response = annonceService.createAnnonce(annonceRequest, currentUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     /**
      * Met à jour une annonce existante
      */
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     @Operation(summary = "Modifier une annonce",
             description = "Met à jour une annonce existante")
     @ApiResponses(value = {
@@ -184,7 +237,7 @@ class AnnonceController {
             , @AuthenticationPrincipal User currentUser
             ) {
 
-        log.info("Modification d'annonce ID: {} demandée par l'utilisateur: ", id
+        log.info("Ajout au favori de l'annonce ID: {} demandée par l'utilisateur: {}", id
                 ,currentUser.getEmail()
         );
 
