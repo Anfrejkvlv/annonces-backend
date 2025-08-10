@@ -1,5 +1,6 @@
 package com.logement.etudiants.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.logement.etudiants.enumeration.TypeLogement;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
