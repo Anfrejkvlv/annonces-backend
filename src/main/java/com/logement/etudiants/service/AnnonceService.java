@@ -3,6 +3,7 @@ package com.logement.etudiants.service;
 import com.logement.etudiants.dto.request.AnnonceRequest;
 import com.logement.etudiants.dto.request.AnnonceSearchRequest;
 import com.logement.etudiants.dto.response.AnnonceResponse;
+import com.logement.etudiants.dto.response.FileUploadResponse;
 import com.logement.etudiants.dto.response.PageResponse;
 import com.logement.etudiants.entity.Annonce;
 import com.logement.etudiants.entity.Quartier;
@@ -24,11 +25,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service de gestion des annonces
@@ -45,6 +49,46 @@ public class AnnonceService {
     private final AnnonceMapper annonceMapper;
     private final ModerationService moderationService;
     private final NotificationService notificationService;
+    private final FileUploadService fileUploadService;
+
+
+
+    @Transactional
+    public AnnonceResponse createAnnonceWithImages(
+            AnnonceRequest request,
+            List<MultipartFile> images,
+            User currentUser) {
+
+        log.info("🔄 Traitement création avec {} images",
+                images != null ? images.size() : 0);
+
+        List<String> imageUrls = new ArrayList<>();
+
+        // Upload des images si présentes
+        if (images != null && !images.isEmpty()) {
+            try {
+                List<FileUploadResponse> uploadResults =
+                        fileUploadService.uploadMultipleFiles(images);
+
+                imageUrls = uploadResults.stream()
+                        .map(FileUploadResponse::getUrl)
+                        .collect(Collectors.toList());
+
+                log.info("✅ {} images uploadées avec succès", uploadResults.size());
+
+            } catch (Exception e) {
+                log.error("❌ Erreur upload images: {}", e.getMessage());
+                throw new BusinessException("Erreur lors de l'upload des images: " + e.getMessage());
+            }
+        }
+
+        // Mettre les URLs dans la requête
+        request.setImages(imageUrls);
+
+        // Appel de la méthode standard
+        return createAnnonce(request, currentUser);
+    }
+
 
     /**
      * Crée une nouvelle annonce
@@ -358,9 +402,11 @@ public class AnnonceService {
                 annonce.getPrix(),
                 pageable);
 
-        return similarAnnonces.stream()
+        return annonceMapper.toResponseList(similarAnnonces);
+
+        /*return similarAnnonces.stream()
                 .map(annonceMapper::toResponse)
-                .toList();
+                .toList();*/
     }
 
     /**
