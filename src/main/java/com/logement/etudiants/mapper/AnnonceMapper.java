@@ -30,7 +30,7 @@ public interface AnnonceMapper {
     /**
      * Convertit une liste d'entités Annonce en liste de DTOs de réponse
      */
-    java.util.List<com.logement.etudiants.dto.response.AnnonceResponse> toResponseList(
-            java.util.List<com.logement.etudiants.entity.Annonce> annonces);
+    java.util.List<AnnonceResponse> toResponseList(
+            java.util.List<Annonce> annonces);
 }
 
