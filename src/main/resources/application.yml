@@ -23,6 +23,7 @@ spring:
       write-dates-as-timestamps: false
       indent-output: true
     deserialization:
+      use-big-decimal-for-floats: true
       fail-on-unknown-properties: false
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: UTC
