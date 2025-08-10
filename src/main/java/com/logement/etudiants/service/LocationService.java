@@ -77,7 +77,7 @@ public class LocationService {
 
         return villeRepository.findByActiveTrueOrderByNomAsc()
                 .stream()
-                .map(ville -> com.logement.etudiants.dto.response.VilleResponse.builder()
+                .map(ville -> VilleResponse.builder()
                         .id(ville.getId())
                         .nom(ville.getNom())
                         .codePostal(ville.getCodePostal())
@@ -96,12 +96,12 @@ public class LocationService {
     /**
      * Récupère les quartiers d'une ville
      */
-    public List<com.logement.etudiants.dto.response.QuartierResponse> getQuartiersByVille(Long villeId) {
+    public List<QuartierResponse> getQuartiersByVille(Long villeId) {
         log.debug("Récupération des quartiers pour la ville ID: {}", villeId);
 
         return quartierRepository.findByVille_IdAndActiveTrueOrderByNomAsc(villeId)
                 .stream()
-                .map(quartier -> com.logement.etudiants.dto.response.QuartierResponse.builder()
+                .map(quartier -> QuartierResponse.builder()
                         .id(quartier.getId())
                         .nom(quartier.getNom())
                         .description(quartier.getDescription())
