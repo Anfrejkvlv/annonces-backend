@@ -1,6 +1,7 @@
 package com.logement.etudiants.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logement.etudiants.enumeration.Role;
 import com.logement.etudiants.enumeration.StatutAnnonce;
 import jakarta.persistence.*;
@@ -42,6 +43,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long id;
 
     @NotBlank(message = "Le nom est obligatoire")
@@ -60,11 +62,13 @@ public class User implements UserDetails {
     @NotBlank(message = "L'email est obligatoire")
     @Size(max = 150, message = "L'email ne peut pas dépasser 150 caractères")
     @Column(unique = true, nullable = false, length = 150)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String email;
 
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 60, max = 255, message = "Hash du mot de passe invalide")
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Pattern(regexp = "^\\+?[0-9]{8,15}$", message = "Format de téléphone invalide")
@@ -250,164 +254,6 @@ public class User implements UserDetails {
 }
 
 
-/**
- * Entité User représentant un utilisateur du système
- * Implémente UserDetails pour l'intégration Spring Security
- */
-
-/*
-@Entity
-@Table(name = "users", indexes = {
-        @Index(name = "idx_user_email", columnList = "email"),
-        @Index(name = "idx_user_pays", columnList = "pays"),
-        @Index(name = "idx_user_active", columnList = "active")
-})
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(exclude = {"annonces"})
-@ToString(exclude = {"password", "annonces"})
-public class User implements UserDetails {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
-    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets")
-    @Column(nullable = false, length = 50)
-    private String nom;
-
-    @NotBlank(message = "Le prénom est obligatoire")
-    @Size(min = 2, max = 50, message = "Le prénom doit contenir entre 2 et 50 caractères")
-    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "Le prénom ne peut contenir que des lettres, espaces, apostrophes et tirets")
-    @Column(nullable = false, length = 50)
-    private String prenom;
-
-    @Email(message = "Format d'email invalide")
-    @NotBlank(message = "L'email est obligatoire")
-    @Size(max = 150, message = "L'email ne peut pas dépasser 150 caractères")
-    @Column(unique = true, nullable = false, length = 150)
-    private String email;
-
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 60, max = 100, message = "Hash du mot de passe invalide")
-    @Column(nullable = false)
-    private String password;
-
-    @Pattern(regexp = "^\\+?[0-9]{8,15}$", message = "Format de téléphone invalide")
-    @Size(max = 20)
-    @Column(length = 20)
-    private String telephone;
-
-    @NotBlank(message = "Le pays est obligatoire")
-    @Size(min = 2, max = 100, message = "Le pays doit contenir entre 2 et 100 caractères")
-    @Column(nullable = false, length = 100)
-    private String pays;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @Builder.Default
-    @Column(name = "email_verifie", nullable = false)
-    private Boolean emailVerifie = false;
-
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    @Column(nullable = false)
-    private Role role = Role.USER;
-
-    @CreationTimestamp
-    @Column(name = "date_creation", nullable = false, updatable = false)
-    private LocalDateTime dateCreation;
-
-    @UpdateTimestamp
-    @Column(name = "derniere_connexion")
-    private LocalDateTime derniereConnexion;
-
-    @Column(name = "token_reset_password")
-    private String tokenResetPassword;
-
-    @Column(name = "token_reset_expiration")
-    private LocalDateTime tokenResetExpiration;
-
-    @Column(name = "tentatives_connexion_echouees", nullable = false)
-    @Builder.Default
-    private Integer tentativesConnexionEchouees = 0;
-
-    @Column(name = "compte_verrouille_jusqu")
-    private LocalDateTime compteVerrouilleJusqu;
-
-    // Relations
-    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Annonce> annonces = new HashSet<>();
-
-    // Méthodes UserDetails
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return compteVerrouilleJusqu == null || compteVerrouilleJusqu.isBefore(LocalDateTime.now());
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return active && emailVerifie;
-    }
-
-    // Méthodes utilitaires
-    public String getNomComplet() {
-        return prenom + " " + nom;
-    }
-
-    public boolean isAdmin() {
-        return role == Role.ADMIN;
-    }
-
-    public void incrementTentativesEchouees() {
-        this.tentativesConnexionEchouees++;
-        if (this.tentativesConnexionEchouees >= 5) {
-            this.compteVerrouilleJusqu = LocalDateTime.now().plusHours(1);
-        }
-    }
-
-    public void resetTentativesEchouees() {
-        this.tentativesConnexionEchouees = 0;
-        this.compteVerrouilleJusqu = null;
-    }
-
-    // Callback JPA
-    @PrePersist
-    protected void onCreate() {
-        if (dateCreation == null) {
-            dateCreation = LocalDateTime.now();
-        }
-    }
-}
-
- */
 
 
 
