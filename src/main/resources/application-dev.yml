@@ -44,7 +44,13 @@ jwt:
   expiration: 86400000   # 24 heures pour dev
   
 cors:
-  allowed-origins: http://localhost:4200,http://localhost:3000,http://127.0.0.1:4200,swagger-ui/**,/v3/api-docs*/**,/**
+  allowed-origins:
+    - 'http://localhost:4200'
+    - 'http://localhost:3000'
+    - 'http://127.0.0.1:4200'
+    - 'swagger-ui/**'
+    - '/v3/api-docs*/**'
+    - '/**'
 
 # Logs détaillés en développement
 logging:
