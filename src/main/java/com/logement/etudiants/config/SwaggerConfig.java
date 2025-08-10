@@ -45,18 +45,5 @@ public class SwaggerConfig {
                 ));
     }
 }
-/*
-@Configuration
-public class SwaggerConfig {
-    @Bean
-    public OpenAPI openAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("API Logements Étudiants")
-                        .version("1.0.0")
-                        .description("Documentation Swagger"));
-    }
-}
 
- */
 
