@@ -92,9 +92,13 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
     /**
      * Trouve les annonces en attente de modération
      */
-    @Query("SELECT a FROM Annonce a WHERE a.statut = 'EN_ATTENTE' " +
+    @Query("SELECT a FROM Annonce a WHERE a.statut = 'EN_ATTENTE' OR a.statut='REJETEE' " +
             "ORDER BY a.dateCreation ASC")
     List<Annonce> findPendingAnnonces();
+
+    @Query("SELECT a FROM Annonce a WHERE a.statut = 'EN_ATTENTE' OR a.statut='REJETEE' " +
+            "ORDER BY a.dateCreation ASC")
+    Page<Annonce> findPendingAnnoncesPages(Pageable pageable);
 
     /**
      * Trouver des annonces REJETEE
