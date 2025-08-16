@@ -1,6 +1,7 @@
 package com.logement.etudiants.repository;
 
 import com.logement.etudiants.entity.Ville;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -48,7 +49,7 @@ public interface VilleRepository extends JpaRepository<Ville, Long> {
     @Query("SELECT v FROM Ville v WHERE " +
             "LOWER(v.nom) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(v.pays) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-    List<Ville> findBySearchTerm(@Param("searchTerm") String searchTerm);
+    Page<Ville> findBySearchTerm(@Param("searchTerm") String searchTerm,Pageable pageable);
 
     /**
      * Trouve les villes avec le plus d'annonces
@@ -56,5 +57,9 @@ public interface VilleRepository extends JpaRepository<Ville, Long> {
     @Query("SELECT v FROM Ville v WHERE v.active = true " +
             "ORDER BY v.nombreAnnonces DESC")
     List<Ville> findVillesWithMostAnnonces(Pageable pageable);
+
+
+    @Query("SELECT v FROM Ville v")
+    Page<Ville> findWithFilter(Pageable pageable);
 }
 
