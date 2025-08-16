@@ -1,20 +1,27 @@
 package com.logement.etudiants.controller;
 
 import com.logement.etudiants.dto.request.AnnonceSearchRequest;
+import com.logement.etudiants.dto.request.UserSearchRequest;
+import com.logement.etudiants.dto.request.VilleSearchRequest;
 import com.logement.etudiants.dto.response.*;
 import com.logement.etudiants.entity.Annonce;
 import com.logement.etudiants.entity.User;
+import com.logement.etudiants.enumeration.Role;
 import com.logement.etudiants.enumeration.StatutAnnonce;
 import com.logement.etudiants.service.AnnonceService;
 import com.logement.etudiants.service.LocationService;
 import com.logement.etudiants.service.ModerationService;
 import com.logement.etudiants.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -78,23 +85,38 @@ public class AdminController {
     @GetMapping("/annonces/pending")
     @Operation(summary = "Annonces en attente",
             description = "Récupère toutes les annonces en attente de modération")
-    public ResponseEntity<List<AnnonceResponse>> getPendingAnnonces() {
+    public ResponseEntity<List<Annonce>> getPendingAnnonces() {
         log.info("Récupération des annonces en attente de modération");
 
         // TODO: Implémenter la récupération des annonces en attente
-        List<AnnonceResponse> pendingAnnonces = List.of();
+        List<Annonce> pendingAnnonces = annonceService.findPendingOrRejectedAnnonce();
 
         return ResponseEntity.ok(pendingAnnonces);
     }
 
     /**
-     * Liste des annonces en attente de modération
+     * Moderation des annonces
+     */
+    @GetMapping("/moderation")
+    @Operation(summary = "Annonces en attente",
+            description = "Récupère toutes les annonces en attente de modération")
+    public ResponseEntity<PageResponse<AnnonceResponse>> getPendingAnnoncesByStatut(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ){
+        Pageable pageable = PageRequest.of(page,size);
+        PageResponse<AnnonceResponse> responses=annonceService.getPendingListing(pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Total des annonces en attente de modération
      */
     @GetMapping("/stats/pending-count")
     @Operation(summary = "Total annonces en attente",
             description = "Récupère toutes les annonces en attente de modération")
     public Integer getTotalPendingAnnonces() {
-        log.info("Récupération des annonces en attente de modération");
+        log.info("Récupération le total des annonces en attente de modération");
 
         StatistiquesResponse stats= getDashboard().getBody();
         assert stats != null;
@@ -150,7 +172,7 @@ public class AdminController {
     /**
      * Approuver une annonce
      */
-    @PostMapping("/annonces/{id}/approve")
+    @PutMapping("/annonces/{id}/approve")
     @Operation(summary = "Approuver une annonce rejetee",
             description = "Approuve une annonce rejetee et la rend visible publiquement")
     public ResponseEntity<MessageResponse> approveAnnonce(
@@ -169,7 +191,7 @@ public class AdminController {
     /**
      * Rejeter une annonce
      */
-    @PostMapping("/annonces/{id}/reject")
+    @PostMapping("/annonces/{id}/rejected")
     @Operation(summary = "Rejeter une annonce",
             description = "Rejette une annonce avec un commentaire explicatif")
     public ResponseEntity<MessageResponse> rejectAnnonce(
@@ -184,35 +206,56 @@ public class AdminController {
         return ResponseEntity.ok(MessageResponse.success("Annonce rejetée"));
     }
 
+    //PARTIE UTILISATEUR
+
     /**
      * Liste de tous les utilisateurs
      */
     @GetMapping("/users")
     @Operation(summary = "Liste des utilisateurs",
+            description = "Récupère la liste de tous les utilisateurs")
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    /**
+     * Recuperer tous les utilisateurs avec filtre
+     */
+    @GetMapping("/userspage")
+    @Operation(summary = "Liste des utilisateurs avec filtres",
             description = "Récupère la liste paginée de tous les utilisateurs")
-    public ResponseEntity<List<UserResponse>> getAllUsers(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size,
-//            @RequestParam(required = false) String search
+    public ResponseEntity<PageResponse<UserResponse>> allUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String pays,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDirection,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
 
-        //log.info("Récupération de la liste des utilisateurs (page: {}, taille: {}, recherche: {})", page, size, search);
+        log.info("Récupération de la liste des utilisateurs (page: {}, taille: {}, recherche: {})", page, size, search);
 
         // TODO: Implémenter la récupération paginée des utilisateurs
-//        PageResponse<UserResponse> users = PageResponse.<UserResponse>builder()
-//                .content(userService.getAllUsers())
-//                .page(page)
-//                .size(size)
-//                .totalElements(0L)
-//                .totalPages(0)
-//                .first(true)
-//                .last(true)
-//                .empty(true)
-//                .build();
+        UserSearchRequest searchRequest = UserSearchRequest.builder()
+                .search(search)
+                .pays(pays)
+                .active(active)
+                .sortDirection(sortDirection)
+                .role(role !=null ? Role.valueOf(role.toUpperCase()): null)
+                .sortBy(sortBy !=null ? sortBy: "dateCreation")
+                .build();
 
-        //PageResponse<UserResponse> users=userService.getAllUsers();
+        Sort sort= sortDirection.equalsIgnoreCase("asc") ?
+            Sort.by(searchRequest.getSortBy()).ascending() :
+            Sort.by(searchRequest.getSortBy()).descending();
 
-        return ResponseEntity.ok(userService.getAllUsers());
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        PageResponse<UserResponse> users=userService.getAllUsersWithFilters(searchRequest, pageable);
+
+        return ResponseEntity.ok(users);
     }
 
     /**
@@ -249,6 +292,9 @@ public class AdminController {
         return ResponseEntity.ok(MessageResponse.success("Utilisateur réactivé"));
     }
 
+
+
+    // PARTIE MODERATION
     /**
      * Rapport de modération pour une annonce
      */
@@ -270,4 +316,52 @@ public class AdminController {
         return ResponseEntity.ok(report);
     }
 
+
+    @GetMapping("/villes")
+    @Operation(summary = "Récupérer les villes publiques",
+            description = "Récupère toutes les villes approuvées avec filtres optionnels")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Villes récupérées avec succès")
+    })
+    public ResponseEntity<PageResponse<VilleResponse>> getVillesPageable(
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false, defaultValue = "nom") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDirection,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+
+        // Construire la requête de recherche
+        VilleSearchRequest searchRequest = VilleSearchRequest.builder()
+                .search(searchTerm)
+                .sort(sortDirection)
+                .sortBy(sortBy)
+                .build();
+
+
+        Sort sort = sortDirection.equalsIgnoreCase("asc") ?
+                Sort.by(searchRequest.getSortBy()).ascending() :
+                Sort.by(searchRequest.getSortBy()).descending();
+
+        Pageable pageable =
+                PageRequest.of(page, size, sort);
+
+
+        PageResponse<VilleResponse> response = locationService.getAllVillesPageable(searchRequest, pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Liste des villes
+     */
+    @GetMapping("/ville")
+    @Operation(summary = "Récupérer les villes ",
+            description = "Récupère toutes les villes approuvées")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Villes récupérées avec succès")
+    })
+    public ResponseEntity<List<VilleResponse>> getAllVilles() {
+        return ResponseEntity.ok(locationService.getAllVilles());
+    }
 }
