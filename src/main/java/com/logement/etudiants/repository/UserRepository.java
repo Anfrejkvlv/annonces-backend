@@ -1,7 +1,9 @@
 package com.logement.etudiants.repository;
 
+import com.logement.etudiants.entity.Annonce;
 import com.logement.etudiants.entity.User;
 import com.logement.etudiants.enumeration.Role;
+import com.logement.etudiants.enumeration.TypeLogement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +82,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u")
     Page<User> findAllUsers( Pageable pageable);
+
+    /**
+     * Recherche d'annonces avec filtres multiples
+     */
+    @Query("SELECT a FROM User a WHERE " +
+            "(:active IS NULL OR a.active = :active) " +
+            "AND (:pays IS NULL OR a.pays = :pays) " +
+            "AND (:role IS NULL OR a.role= : role)")
+    Page<User> findUsersWithFilters(
+            @Param("role") Role role,
+            @Param("pays") String pays,
+            @Param("active") Boolean active,
+            Pageable pageable);
 
     /**
      * Trouve un utilisateur par token de réinitialisation
