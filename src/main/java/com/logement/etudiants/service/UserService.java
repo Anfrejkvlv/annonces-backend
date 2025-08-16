@@ -1,6 +1,7 @@
 package com.logement.etudiants.service;
 
 import com.logement.etudiants.dto.request.UpdateProfileRequest;
+import com.logement.etudiants.dto.request.UserSearchRequest;
 import com.logement.etudiants.dto.response.PageResponse;
 import com.logement.etudiants.dto.response.UserResponse;
 import com.logement.etudiants.entity.User;
@@ -108,4 +109,49 @@ public class UserService {
         return userRepository.findUsersCreatedToday().size();
     }
 
+
+    /**
+     * Recuperer tous les utilisateurs avec filtres
+     */
+    public PageResponse<UserResponse> getAllUsersWithFilters(UserSearchRequest request, Pageable pageable) {
+        Page<User> userPage;
+
+        if( request.getSearch()!=null && !request.getSearch().isEmpty()){
+            userPage=userRepository.findBySearchTerm(request.getSearch().trim(),pageable);
+        }
+        else{
+            userPage=userRepository.findUsersWithFilters(
+                    request.getRole(),
+                    request.getPays(),
+                    request.getActive()
+                    ,pageable);
+        }
+
+        List<UserResponse> userResponses=userPage.getContent()
+                .stream()
+                .map(userMapper::toResponse)
+                .toList();
+
+        Map<String, Object> map=new HashMap<>();
+        map.put("role", request.getRole());
+        map.put("pays", request.getPays());
+        map.put("active", request.getActive());
+
+
+
+        return PageResponse.<UserResponse>builder()
+                .content(userResponses)
+                .page(userPage.getNumber())
+                .size(userPage.getSize())
+                .totalPages(userPage.getTotalPages())
+                .totalElements(userPage.getTotalElements())
+                .filters(map)
+                .first(userPage.isFirst())
+                .last(userPage.isLast())
+                .empty(userPage.isEmpty())
+                .sortBy(request.getSortBy())
+                .sortDirection(request.getSortDirection())
+                .build();
+
+    }
 }
