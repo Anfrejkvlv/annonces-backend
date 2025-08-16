@@ -25,5 +25,11 @@ public class UserController {
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User currentUser){
         return ResponseEntity.ok(userService.getProfile(currentUser.getId()));
     }
+
+    /**
+     * Recuperer tous les utilisateurs avec un filtre
+     */
+
+
 }
 
