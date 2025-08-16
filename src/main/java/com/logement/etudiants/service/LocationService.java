@@ -2,6 +2,8 @@ package com.logement.etudiants.service;
 
 import com.logement.etudiants.dto.request.QuartierRequest;
 import com.logement.etudiants.dto.request.VilleRequest;
+import com.logement.etudiants.dto.request.VilleSearchRequest;
+import com.logement.etudiants.dto.response.PageResponse;
 import com.logement.etudiants.dto.response.QuartierResponse;
 import com.logement.etudiants.dto.response.VilleResponse;
 import com.logement.etudiants.entity.Quartier;
@@ -11,9 +13,11 @@ import com.logement.etudiants.repository.QuartierRepository;
 import com.logement.etudiants.repository.VilleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -112,5 +116,31 @@ public class LocationService {
                         .nomComplet(quartier.getNomComplet())
                         .build())
                 .toList();
+    }
+
+    public PageResponse<VilleResponse> getAllVillesPageable(VilleSearchRequest request, Pageable pageable) {
+        Page<Ville> villePage;
+
+        if (request.getSearch()!=null && !request.getSearch().isEmpty()) {
+            villePage=villeRepository.findBySearchTerm(request.getSearch().trim(),pageable);
+        }
+        else {
+            villePage=villeRepository.findWithFilter(pageable);
+        }
+        List<VilleResponse> villeResponseList=villePage.getContent()
+                .stream()
+                .map(locationMapper::toVilleResponse)
+                .toList();
+        return PageResponse.<VilleResponse>builder()
+                .content((villeResponseList))
+                .page(villePage.getNumber())
+                .size(villePage.getSize())
+                .totalElements(villePage.getTotalElements())
+                .totalPages(villePage.getTotalPages())
+                .first(villePage.isFirst())
+                .last(villePage.isLast())
+                .empty(villePage.isEmpty())
+                .sortBy(request.getSortBy())
+                .sortDirection(request.getSort()).build();
     }
 }
