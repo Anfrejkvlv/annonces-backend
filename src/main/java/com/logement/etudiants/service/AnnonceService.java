@@ -236,6 +236,33 @@ public class AnnonceService {
     }
 
     /**
+     * Recupere des annonces en attente de Moderation
+     */
+
+    public PageResponse<AnnonceResponse> getPendingListing(Pageable pageable) {
+        Page<Annonce> annoncesPage;
+
+        annoncesPage=annonceRepository.findPendingAnnoncesPages(pageable);
+
+        List<AnnonceResponse> annonceResponses = annoncesPage.getContent()
+                .stream()
+                .map(annonceMapper::toResponse)
+                .toList();
+
+        return PageResponse.<AnnonceResponse>builder()
+                .content(annonceResponses)
+                .page(annoncesPage.getNumber())
+                .size(annoncesPage.getSize())
+                .totalElements(annoncesPage.getTotalElements())
+                .totalPages(annoncesPage.getTotalPages())
+                .first(annoncesPage.isFirst())
+                .last(annoncesPage.isLast())
+                .empty(annoncesPage.isEmpty())
+                .build();
+
+    }
+
+    /**
      * Récupère une annonce par son ID avec incrément des vues
      */
     @Transactional
@@ -531,18 +558,30 @@ public class AnnonceService {
     /**
      * Approuver une annonce ayant un status REJETEE OU EN ATTENTE
      */
-    public void approveAnnonce(Long id, String commentaire){
-        List<Annonce> annoncesList= annonceRepository.findAnnoncesRejected();
+    public void approveAnnonce(Long id, String commentaire) {
+        List<Annonce> annoncesList = annonceRepository.findAnnoncesRejected();
         if (annoncesList.isEmpty()) {
             throw new ResourceNotFoundException("Aucune annonce rejete trouver");
         }
-        Annonce annonce= annoncesList.stream()
-                    .filter(annonce1 -> annonce1
-                            .getId().equals(id)).findFirst().get();
+        Annonce annonce = annoncesList.stream()
+                .filter(annonce1 -> annonce1
+                        .getId().equals(id)).findFirst().get();
         annonce.setStatut(StatutAnnonce.APPROUVEE);
         annonce.setCommentaireModeation(commentaire);
         annonce=annonceRepository.save(annonce);
     }
 
-}
+    /**
+     * Recuperer les annonces ayant EN_ATTENTE OU REJETEE pour la moderation
+     */
+    public List<Annonce> findPendingOrRejectedAnnonce(){
 
+        List<Annonce> annoncesList= annonceRepository.findPendingAnnonces();
+
+        if (annoncesList.isEmpty()) {
+            throw new BusinessException("Aucune annonce en attente ou rejetee trouver");
+        }
+        return (annoncesList);
+    }
+
+}
