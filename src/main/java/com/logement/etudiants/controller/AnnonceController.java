@@ -7,6 +7,7 @@ import com.logement.etudiants.dto.response.MessageResponse;
 import com.logement.etudiants.dto.response.PageResponse;
 import com.logement.etudiants.entity.Annonce;
 import com.logement.etudiants.entity.User;
+import com.logement.etudiants.enumeration.TypeLogement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,6 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -71,7 +75,7 @@ class AnnonceController {
         AnnonceSearchRequest searchRequest = AnnonceSearchRequest.builder()
                 .searchTerm(searchTerm)
                 .typeLogement(typeLogement != null ?
-                        com.logement.etudiants.enumeration.TypeLogement.valueOf(typeLogement.toUpperCase()) : null)
+                        TypeLogement.valueOf(typeLogement.toUpperCase()) : null)
                 .villeId(villeId)
                 .quartierId(quartierId)
                 .prixMin(prixMin)
@@ -88,12 +92,11 @@ class AnnonceController {
                 .build();
 
         // Créer le Pageable
-        org.springframework.data.domain.Sort sort = sortDirection.equalsIgnoreCase("asc") ?
-                org.springframework.data.domain.Sort.by(searchRequest.getSortBy()).ascending() :
-                org.springframework.data.domain.Sort.by(searchRequest.getSortBy()).descending();
+        Sort sort = sortDirection.equalsIgnoreCase("asc") ?
+                Sort.by(searchRequest.getSortBy()).ascending() :
+                Sort.by(searchRequest.getSortBy()).descending();
 
-        org.springframework.data.domain.Pageable pageable =
-                org.springframework.data.domain.PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         PageResponse<AnnonceResponse> response = annonceService.getAnnonces(searchRequest, pageable);
 
