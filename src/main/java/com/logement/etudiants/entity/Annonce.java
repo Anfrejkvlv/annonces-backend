@@ -85,19 +85,19 @@ public class Annonce implements Serializable {
     private String adresse;
 
     // Relations
-    @JsonIgnore
+    //@JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ville_id", nullable = false)
     @NotNull(message = "La ville est obligatoire")
     private Ville ville;
 
-    @JsonIgnore
+    //@JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "quartier_id", nullable = false)
     @NotNull(message = "Le quartier est obligatoire")
     private Quartier quartier;
 
-    @JsonIgnore
+    //@JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "utilisateur_id", nullable = false)
     @NotNull(message = "L'utilisateur est obligatoire")
